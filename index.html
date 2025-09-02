@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pendón Feria de la Ciencia ITO 2025</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .form-section {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .preview-section {
+      flex: 2;
+      min-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #003366;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+    .char-counter {
+      font-size: 12px;
+      text-align: right;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    .char-counter.warning { color: #d97706; }
+    .char-counter.danger { color: #e3342f; }
+
+    .entry {
+      border: 1px solid #e0e0e0;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+    .remove-btn {
+      background: #e3342f;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    button {
+      background: #003366;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px 0 0;
+    }
+    button:hover { background: #002244; }
+
+    .poster {
+      width: 800px;
+      min-height: 1200px;
+      margin: 0 auto;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 40px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .poster h1 {
+      text-align: center;
+      font-size: 36px;
+      color: #003366;
+      margin-bottom: 10px;
+    }
+    .poster h2 {
+      color: #003366;
+      border-bottom: 2px solid #003366;
+      padding-bottom: 5px;
+      margin: 20px 0 10px;
+      font-size: 24px;
+    }
+    .poster h3 {
+      font-size: 18px;
+      color: #003366;
+      margin: 5px 0;
+    }
+    .poster p {
+      font-size: 18px;
+      line-height: 1.6;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
+    .qr-placeholder {
+      width: 150px;
+      height: 150px;
+      margin: 20px auto;
+      display: block;
+      object-fit: contain;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .year-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #003366;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .saved-projects {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .saved-projects button {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Formulario -->
+    <div class="form-section">
+      <h2>📝 Proyecto de Ciencia ITO 2025</h2>
+      <form id="projectForm">
+
+        <label>Año de la Feria</label>
+        <input type="number" id="year" placeholder="Ej: 2025" min="2020" max="2030" value="2025" oninput="updatePreview()">
+
+        <label>Título del Proyecto</label>
+        <input type="text" id="title" placeholder="Ej: Midiendo la convivencia con matemáticas" maxlength="100" oninput="updateCounter(this, 'titleCounter'); updatePreview()">
+        <div class="char-counter" id="titleCounter">0/100</div>
+
+        <!-- Estudiantes -->
+        <label>Estudiantes</label>
+        <div id="studentsList">
+          <div class="entry">
+            <input type="text" placeholder="Nombre completo" class="student-name" oninput="updatePreview()">
+            <input type="email" placeholder="Correo" class="student-email" oninput="updatePreview()">
+            <input type="tel" placeholder="Teléfono" class="student-phone" oninput="updatePreview()">
+            <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+          </div>
+        </div>
+        <button type="button" onclick="addStudent()">+ Agregar otro estudiante</button>
+
+        <label>Grado</label>
+        <select id="grade" onchange="updatePreview()">
+          <option>6°</option>
+          <option>7°</option>
+          <option>8°</option>
+          <option>9°</option>
+          <option>10°</option>
+          <option>11°</option>
+        </select>
+
+        <!-- Docentes -->
+        <label>Docentes Acompañantes</label>
+        <div id="teachersList">
+          <div class="entry">
+            <input type="text" placeholder="Nombre del docente" class="teacher-name" oninput="updatePreview()">
+            <input type="text" placeholder="Asignatura" class="teacher-subject" oninput="updatePreview()">
+            <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+          </div>
+        </div>
+        <button type="button" onclick="addTeacher()">+ Agregar otro docente</button>
+
+        <label>¿Qué problema investigas?</label>
+        <textarea id="problem" maxlength="200" oninput="updateCounter(this, 'problemCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="problemCounter">0/200</div>
+
+        <label>Objetivo del Proyecto</label>
+        <textarea id="objective" maxlength="500" oninput="updateCounter(this, 'objectiveCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="objectiveCounter">0/500</div>
+
+        <label>Justificación</label>
+        <textarea id="justification" maxlength="500" oninput="updateCounter(this, 'justificationCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="justificationCounter">0/500</div>
+
+        <label>Metodología</label>
+        <textarea id="methodology" maxlength="500" oninput="updateCounter(this, 'methodologyCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="methodologyCounter">0/500</div>
+
+        <label>Resultados y Conclusión</label>
+        <textarea id="results" maxlength="500" oninput="updateCounter(this, 'resultsCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="resultsCounter">0/500</div>
+
+        <label>Referencias</label>
+        <textarea id="references" maxlength="200" oninput="updateCounter(this, 'referencesCounter'); updatePreview()"></textarea>
+        <div class="char-counter" id="referencesCounter">0/200</div>
+
+        <label>Imagen de Código QR (opcional)</label>
+        <input type="file" id="qrInput" accept="image/*" onchange="loadQRImage(event)">
+        <small>Recomendado: QR cuadrado (150x150 px)</small>
+
+        <hr>
+        <h3>📁 Gestión de Proyectos</h3>
+        <button type="button" onclick="saveProject()">💾 Guardar Proyecto</button>
+        <button type="button" onclick="loadProjects()">🔄 Cargar Proyectos</button>
+        <button type="button" onclick="clearForm()">🧹 Limpiar Formulario</button>
+        <div id="savedProjectsList" class="saved-projects"></div>
+
+        <button type="button" onclick="updatePreview()">Actualizar Vista Previa</button>
+        <button type="button" onclick="downloadPDF()">📄 Descargar PDF</button>
+        <button type="button" onclick="downloadPNG()">🖼️ Descargar PNG</button>
+      </form>
+    </div>
+
+    <!-- Vista Previa -->
+    <div class="preview-section">
+      <h2>👁️ Vista Previa del Pendón</h2>
+      <div id="posterPreview" class="poster">
+        <div class="logo">
+          <h3>Institución Educativa Tulio Ospina - ITO</h3>
+          <p class="year-label">Feria de la Ciencia <span id="posterYear">2025</span></p>
+        </div>
+        <h1 id="posterTitle">TÍTULO DEL PROYECTO</h1>
+        <div id="posterStudents"></div>
+        <p><strong>GRADO:</strong> <span id="posterGrade">[Grado]</span></p>
+        <div id="posterTeachers"></div>
+
+        <div class="section">
+          <h2>1. ¿QUÉ PROBLEMA QUIERO INVESTIGAR?</h2>
+          <p id="posterProblem">[Problema]</p>
+        </div>
+
+        <div class="section">
+          <h2>2. OBJETIVO DEL PROYECTO</h2>
+          <p id="posterObjective">[Objetivo]</p>
+        </div>
+
+        <div class="section">
+          <h2>3. JUSTIFICACIÓN</h2>
+          <h3>¿POR QUÉ ES IMPORTANTE?</h3>
+          <p id="posterJustification">[Justificación]</p>
+        </div>
+
+        <div class="section">
+          <h2>4. METODOLOGÍA</h2>
+          <h3>¿CÓMO LO HICE?</h3>
+          <p id="posterMethodology">[Metodología]</p>
+        </div>
+
+        <div class="section">
+          <h2>5. RESULTADOS Y CONCLUSIÓN</h2>
+          <p id="posterResults">[Resultados]</p>
+        </div>
+
+        <div class="section">
+          <h2>6. REFERENCIAS</h2>
+          <p id="posterReferences">[Referencias]</p>
+        </div>
+
+        <img id="posterQR" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com" class="qr-placeholder" alt="Código QR">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const limits = {
+      title: 100,
+      problem: 200,
+      objective: 500,
+      justification: 500,
+      methodology: 500,
+      results: 500,
+      references: 200
+    };
+
+    function updateCounter(input, counterId) {
+      const limit = limits[input.id];
+      const current = input.value.length;
+      const counter = document.getElementById(counterId);
+      counter.textContent = `${current}/${limit}`;
+      if (current > limit - 10 && current < limit) {
+        counter.className = 'char-counter warning';
+      } else if (current >= limit) {
+        counter.className = 'char-counter danger';
+      } else {
+        counter.className = 'char-counter';
+      }
+    }
+
+    function addStudent() {
+      const container = document.getElementById('studentsList');
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.innerHTML = `
+        <input type="text" placeholder="Nombre completo" class="student-name" oninput="updatePreview()">
+        <input type="email" placeholder="Correo" class="student-email" oninput="updatePreview()">
+        <input type="tel" placeholder="Teléfono" class="student-phone" oninput="updatePreview()">
+        <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+      `;
+      container.appendChild(entry);
+    }
+
+    function addTeacher() {
+      const container = document.getElementById('teachersList');
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.innerHTML = `
+        <input type="text" placeholder="Nombre del docente" class="teacher-name" oninput="updatePreview()">
+        <input type="text" placeholder="Asignatura" class="teacher-subject" oninput="updatePreview()">
+        <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+      `;
+      container.appendChild(entry);
+    }
+
+    function removeEntry(button) {
+      button.parentElement.remove();
+      updatePreview();
+    }
+
+    function loadQRImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('posterQR').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function updatePreview() {
+      document.getElementById('posterTitle').textContent = document.getElementById('title').value || 'TÍTULO DEL PROYECTO';
+      document.getElementById('posterGrade').textContent = document.getElementById('grade').value;
+      document.getElementById('posterYear').textContent = document.getElementById('year').value;
+
+      // Estudiantes
+      const students = document.querySelectorAll('.student-name');
+      const emails = document.querySelectorAll('.student-email');
+      const phones = document.querySelectorAll('.student-phone');
+      const studentsDiv = document.getElementById('posterStudents');
+      studentsDiv.innerHTML = '<strong>ESTUDIANTES:</strong><br>';
+      students.forEach((s, i) => {
+        const email = emails[i]?.value ? ` (${emails[i].value})` : '';
+        const phone = phones[i]?.value ? ` | ${phones[i].value}` : '';
+        if (s.value) studentsDiv.innerHTML += `${s.value}${email}${phone}<br>`;
+      });
+
+      // Docentes
+      const teachers = document.querySelectorAll('.teacher-name');
+      const subjects = document.querySelectorAll('.teacher-subject');
+      const teachersDiv = document.getElementById('posterTeachers');
+      teachersDiv.innerHTML = '<strong>DOCENTES ACOMPAÑANTES:</strong><br>';
+      teachers.forEach((t, i) => {
+        const subject = subjects[i]?.value ? ` (${subjects[i].value})` : '';
+        if (t.value) teachersDiv.innerHTML += `${t.value}${subject}<br>`;
+      });
+
+      // Otros campos
+      document.getElementById('posterProblem').textContent = document.getElementById('problem').value || '[Problema]';
+      document.getElementById('posterObjective').textContent = document.getElementById('objective').value || '[Objetivo]';
+      document.getElementById('posterJustification').textContent = document.getElementById('justification').value || '[Justificación]';
+      document.getElementById('posterMethodology').textContent = document.getElementById('methodology').value || '[Metodología]';
+      document.getElementById('posterResults').textContent = document.getElementById('results').value || '[Resultados]';
+      document.getElementById('posterReferences').textContent = document.getElementById('references').value || '[Referencias]';
+    }
+
+    // 🔽 BASE DE DATOS LOCAL (localStorage)
+    function saveProject() {
+      const project = {
+        id: Date.now(),
+        year: document.getElementById('year').value,
+        title: document.getElementById('title').value,
+        students: Array.from(document.querySelectorAll('.student-name')).map((el, i) => ({
+          name: el.value,
+          email: document.querySelectorAll('.student-email')[i]?.value,
+          phone: document.querySelectorAll('.student-phone')[i]?.value
+        })).filter(s => s.name),
+        grade: document.getElementById('grade').value,
+        teachers: Array.from(document.querySelectorAll('.teacher-name')).map((el, i) => ({
+          name: el.value,
+          subject: document.querySelectorAll('.teacher-subject')[i]?.value
+        })).filter(t => t.name),
+        problem: document.getElementById('problem').value,
+        objective: document.getElementById('objective').value,
+        justification: document.getElementById('justification').value,
+        methodology: document.getElementById('methodology').value,
+        results: document.getElementById('results').value,
+        references: document.getElementById('references').value,
+        qrSrc: document.getElementById('posterQR').src
+      };
+
+      const projects = JSON.parse(localStorage.getItem('scienceProjects') || '[]');
+      projects.push(project);
+      localStorage.setItem('scienceProjects', JSON.stringify(projects));
+      alert('✅ Proyecto guardado con éxito');
+      loadProjects();
+    }
+
+    function loadProjects() {
+      const container = document.getElementById('savedProjectsList');
+      const projects = JSON.parse(localStorage.getItem('scienceProjects') || '[]');
+
+      if (projects.length === 0) {
+        container.innerHTML = '<p>No hay proyectos guardados.</p>';
+        return;
+      }
+
+      container.innerHTML = '<h4>Proyectos guardados:</h4>';
+      projects.forEach(proj => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <strong>${proj.title || 'Sin título'}</strong> (${proj.year})
+          <button onclick="loadProjectById(${proj.id})">Cargar</button>
+          <button onclick="deleteProject(${proj.id})" style="background:#e33">Eliminar</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function loadProjectById(id) {
+      const projects = JSON.parse(localStorage.getItem('scienceProjects') || '[]');
+      const proj = projects.find(p => p.id === id);
+      if (!proj) return;
+
+      document.getElementById('year').value = proj.year;
+      document.getElementById('title').value = proj.title;
+      document.getElementById('grade').value = proj.grade;
+      document.getElementById('problem').value = proj.problem;
+      document.getElementById('objective').value = proj.objective;
+      document.getElementById('justification').value = proj.justification;
+      document.getElementById('methodology').value = proj.methodology;
+      document.getElementById('results').value = proj.results;
+      document.getElementById('references').value = proj.references;
+      document.getElementById('posterQR').src = proj.qrSrc || 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com';
+
+      // Limpiar y cargar estudiantes
+      document.getElementById('studentsList').innerHTML = '';
+      proj.students.forEach(s => {
+        const entry = document.createElement('div');
+        entry.className = 'entry';
+        entry.innerHTML = `
+          <input type="text" placeholder="Nombre" class="student-name" value="${s.name}" oninput="updatePreview()">
+          <input type="email" placeholder="Correo" class="student-email" value="${s.email || ''}" oninput="updatePreview()">
+          <input type="tel" placeholder="Teléfono" class="student-phone" value="${s.phone || ''}" oninput="updatePreview()">
+          <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+        `;
+        document.getElementById('studentsList').appendChild(entry);
+      });
+
+      // Limpiar y cargar docentes
+      document.getElementById('teachersList').innerHTML = '';
+      proj.teachers.forEach(t => {
+        const entry = document.createElement('div');
+        entry.className = 'entry';
+        entry.innerHTML = `
+          <input type="text" placeholder="Nombre" class="teacher-name" value="${t.name}" oninput="updatePreview()">
+          <input type="text" placeholder="Asignatura" class="teacher-subject" value="${t.subject || ''}" oninput="updatePreview()">
+          <button type="button" class="remove-btn" onclick="removeEntry(this)">Eliminar</button>
+        `;
+        document.getElementById('teachersList').appendChild(entry);
+      });
+
+      updatePreview();
+      alert(`📌 Proyecto "${proj.title}" cargado para editar.`);
+    }
+
+    function deleteProject(id) {
+      if (!confirm('¿Eliminar este proyecto?')) return;
+      const projects = JSON.parse(localStorage.getItem('scienceProjects') || '[]').filter(p => p.id !== id);
+      localStorage.setItem('scienceProjects', JSON.stringify(projects));
+      loadProjects();
+    }
+
+    // Limpiar formulario
+    function clearForm() {
+      document.getElementById('title').value = '';
+      document.getElementById('year').value = '2025';
+      document.getElementById('grade').value = '6°';
+      document.getElementById('problem').value = '';
+      document.getElementById('objective').value = '';
+      document.getElementById('justification').value = '';
+      document.getElementById('methodology').value = '';
+      document.getElementById('results').value = '';
+      document.getElementById('references').value = '';
+      document.getElementById('posterQR').src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com';
+
+      // Limpiar estudiantes
+      document.getElementById('studentsList').innerHTML = '';
+      addStudent();
+
+      // Limpiar docentes
+      document.getElementById('teachersList').innerHTML = '';
+      addTeacher();
+
+      updatePreview();
+      alert('🗑 Formulario limpiado');
+    }
+
+    // Descargas
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      html2canvas(document.getElementById('posterPreview'), { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save('pendon_feria_ciencia.pdf');
+      });
+    }
+
+    function downloadPNG() {
+      html2canvas(document.getElementById('posterPreview'), { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'pendon_feria_ciencia.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', () => {
+      Object.keys(limits).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) updateCounter(el, id + 'Counter');
+      });
+      updatePreview();
+      loadProjects();
+    });
+  </script>
+</body>
+</html>
