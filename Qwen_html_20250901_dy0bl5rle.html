@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pendón Feria de la Ciencia ITO 2025</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .form-section {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .preview-section {
+      flex: 2;
+      min-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #003366;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: #003366;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px 0 0;
+    }
+    button:hover {
+      background: #002244;
+    }
+    .poster {
+      width: 800px;
+      height: 1200px;
+      margin: 0 auto;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 40px;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+    }
+    .poster h1 {
+      text-align: center;
+      font-size: 36px;
+      color: #003366;
+      margin-bottom: 10px;
+    }
+    .poster h2 {
+      color: #003366;
+      border-bottom: 2px solid #003366;
+      padding-bottom: 5px;
+      margin: 20px 0 10px;
+      font-size: 24px;
+    }
+    .poster p, .poster ul {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+    .qr-placeholder {
+      width: 150px;
+      height: 150px;
+      background: #ddd;
+      margin: 20px auto;
+      display: block;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-section">
+      <h2>📝 Diligencia tu Proyecto</h2>
+      <form id="projectForm">
+        <label>Título del Proyecto</label>
+        <input type="text" id="title" placeholder="Ej: Midiendo la convivencia con matemáticas">
+
+        <label>Estudiante(s)</label>
+        <input type="text" id="students" placeholder="Nombre completo">
+
+        <label>Grado</label>
+        <select id="grade">
+          <option>6°</option>
+          <option>7°</option>
+          <option>8°</option>
+          <option>9°</option>
+          <option>10°</option>
+          <option>11°</option>
+        </select>
+
+        <label>Docentes Acompañantes</label>
+        <textarea id="teachers" placeholder="Ej: Robinson Velandia (Tecnología)"></textarea>
+
+        <label>¿Qué problema investigas?</label>
+        <textarea id="problem" placeholder="Describe tu pregunta de investigación"></textarea>
+
+        <label>Justificación</label>
+        <textarea id="justification" placeholder="¿Por qué es importante? ¿Aporta a los ODS?"></textarea>
+
+        <label>Metodología</label>
+        <textarea id="methodology" placeholder="Pasos que seguiste"></textarea>
+
+        <label>Resultados y Conclusión</label>
+        <textarea id="results" placeholder="Hallazgos clave, gráficos, análisis"></textarea>
+
+        <label>Referencias</label>
+        <textarea id="references" placeholder="MEN, UNESCO, etc."></textarea>
+
+        <button type="button" onclick="updatePreview()">Actualizar Vista Previa</button>
+        <button type="button" onclick="downloadPDF()">📄 Descargar PDF</button>
+        <button type="button" onclick="downloadPNG()">🖼️ Descargar PNG</button>
+      </form>
+    </div>
+
+    <div class="preview-section">
+      <h2>👁️ Vista Previa del Pendón</h2>
+      <div id="posterPreview" class="poster">
+        <h1 id="posterTitle">TÍTULO DEL PROYECTO</h1>
+        <p><strong>ESTUDIANTE(S):</strong> <span id="posterStudents">[Nombre]</span> | <strong>GRADO:</strong> <span id="posterGrade">[Grado]</span></p>
+        <p><strong>DOCENTES ACOMPAÑANTES:</strong> <span id="posterTeachers">[Docentes]</span></p>
+
+        <div class="section">
+          <h2>1. ¿QUÉ PROBLEMA QUIERO INVESTIGAR?</h2>
+          <p id="posterProblem">[Problema]</p>
+        </div>
+
+        <div class="section">
+          <h2>2. ¿POR QUÉ ES IMPORTANTE?</h2>
+          <p id="posterJustification">[Justificación]</p>
+        </div>
+
+        <div class="section">
+          <h2>3. ¿CÓMO LO HICE?</h2>
+          <p id="posterMethodology">[Metodología]</p>
+        </div>
+
+        <div class="section">
+          <h2>4. RESULTADOS Y CONCLUSIÓN</h2>
+          <p id="posterResults">[Resultados]</p>
+        </div>
+
+        <div class="section">
+          <h2>5. REFERENCIAS</h2>
+          <p id="posterReferences">[Referencias]</p>
+        </div>
+
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com" class="qr-placeholder" alt="QR Code">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updatePreview() {
+      document.getElementById('posterTitle').textContent = document.getElementById('title').value || 'TÍTULO DEL PROYECTO';
+      document.getElementById('posterStudents').textContent = document.getElementById('students').value || '[Nombre]';
+      document.getElementById('posterGrade').textContent = document.getElementById('grade').value;
+      document.getElementById('posterTeachers').textContent = document.getElementById('teachers').value || '[Docentes]';
+      document.getElementById('posterProblem').textContent = document.getElementById('problem').value || '[Problema]';
+      document.getElementById('posterJustification').textContent = document.getElementById('justification').value || '[Justificación]';
+      document.getElementById('posterMethodology').textContent = document.getElementById('methodology').value || '[Metodología]';
+      document.getElementById('posterResults').textContent = document.getElementById('results').value || '[Resultados]';
+      document.getElementById('posterReferences').textContent = document.getElementById('references').value || '[Referencias]';
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      html2canvas(document.getElementById('posterPreview')).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const width = pdf.internal.pageSize.getWidth();
+        const height = pdf.internal.pageSize.getHeight();
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save('pendon_feria_ciencia.pdf');
+      });
+    }
+
+    function downloadPNG() {
+      html2canvas(document.getElementById('posterPreview')).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'pendon_feria_ciencia.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+
+    // Inicializar vista previa
+    document.addEventListener('DOMContentLoaded', updatePreview);
+  </script>
+</body>
+</html>
